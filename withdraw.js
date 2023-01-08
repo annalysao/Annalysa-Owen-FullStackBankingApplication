@@ -1,97 +1,71 @@
-function Withdraw() {
-    const ctx = React.useContext(UserContext);
-    // assuming working with first user's account
-    const user = ctx.users[0];
-    const [status, setStatus] = React.useState(EMPTY_STATUS);
-    const [balance, setBalance] = React.useState(user.balance);
-    const [validTransaction, setValidTransaction] = React.useState(false);
-  
-    const flashStatus = (type, message) => {
-      setStatus({ type, message });
-      setTimeout(() => setStatus(EMPTY_STATUS), 3000);
-      return false;
-    };
-  
-    const isWithdrawalValid = (amount) => {
-      return amount > 0 && amount <= balance;
-    };
-  
-    const resetForm = () => {
-      setAmount("");
-      setValidTransaction(false);
-    };
-  
-    const updateBalance = (amount) => {
-      user.balance = user.balance - amount;
-      setBalance(user.balance);
-    };
-  
-    const handleSuccess = (amount) => {
-      updateBalance(amount);
-      flashStatus("success", "Success: Withdrew $ " + amount, setStatus);
-      resetForm();
-      return false;
-    };
-  
-    const handleError = (message) => {
-      flashStatus("error", "Error: " + message, setStatus);
-      setValidTransaction(false);
-      return false;
-    };
-  
-    const handleSubmit = (event) => {
-      event.preventDefault();
-      const amount = Number(getAmount());
-      if (isWithdrawalValid(amount)) {
-        handleSuccess(amount);
-      } else {
-        handleError("Please enter a valid number to withdraw.");
-      }
-    };
-  
-    const handleChange = (event) => {
-      event.preventDefault();
-      const amount = Number(getAmount());
-      if (isWithdrawalValid(amount)) {
-        setValidTransaction(true);
-      } else {
-        handleError("Not enough funds to withdrawl this amount. Please enter a valid number to withdraw.");
-      }
-    };
-  
-    return (
-      <Card
-        bgcolor="info"
-        header="Withdraw"
-        status={status}
-        body={
-          <>
-            {/* Balance */}
-            <div className="card bg-light mb-3">
-              <div className="card text-white bg-dark mb-3">Balance</div>
-              <div className="bd-highlight">$ {balance}</div>
-            </div>
-            {/* Withdraw Amount */}
-            <label className="atm-controls label huge">
-              <div className="card-label">Withdraw Amount</div>
-              <input
-                id="number-input"
-                className="number-input"
-                width="200"
-                onChange={handleChange}
-              ></input>
-              <button
-                type="submit"
-                className="btn btn-success"
-                onClick={handleSubmit}
-                disabled={!validTransaction}
-              >
-                Withdraw
-              </button>
-            </label>
-          </>
-        }
-      />
-    );
+function Withdraw(){
+  const [show, setShow]     = React.useState(true);
+  const [status, setStatus] = React.useState('');  
+
+  return (
+    <Card
+      bgcolor="success"
+      header="Withdraw"
+      status={status}
+      body={show ? 
+        <WithdrawForm setShow={setShow} setStatus={setStatus}/> :
+        <WithdrawMsg setShow={setShow}/>}
+    />
+  )
+}
+
+function WithdrawMsg(props){
+  return(<>
+    <h5>Success</h5>
+    <button type="submit" 
+      className="btn btn-light" 
+      onClick={() => props.setShow(true)}>
+        Withdraw again
+    </button>
+  </>);
+}
+
+function WithdrawForm(props){
+  const [email, setEmail]   = React.useState('');
+  const [amount, setAmount] = React.useState('');
+  const ctx = React.useContext(UserContext);  
+
+  function handle(){
+    console.log(email,amount);
+    const user = ctx.users.find((user) => user.email == email);
+    if (!user) {
+      props.setStatus('fail!')      
+      return;      
+    }
+
+    user.balance = user.balance - Number(amount);
+    console.log(user);
+    props.setStatus('');      
+    props.setShow(false);
   }
-  
+
+
+  return(<>
+
+    Email<br/>
+    <input type="input" 
+      className="form-control" 
+      placeholder="Enter email" 
+      value={email} 
+      onChange={e => setEmail(e.currentTarget.value)}/><br/>
+
+    Amount<br/>
+    <input type="number" 
+      className="form-control" 
+      placeholder="Enter amount" 
+      value={amount} 
+      onChange={e => setAmount(e.currentTarget.value)}/><br/>
+
+    <button type="submit" 
+      className="btn btn-light" 
+      onClick={handle}>
+        Withdraw
+    </button>
+
+  </>);
+}
